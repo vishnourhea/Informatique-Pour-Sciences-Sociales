@@ -1,0 +1,78 @@
+---
+title: "Devoir Final R - 1"
+author: "Rhea Vishnou Villejoint"
+date: "6/4/2022"
+output: word_document
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+Ce devoir final consiste a analyser un jeu de données de la BRH. Il faut prendre trois variables du jeu de données et etudier leur stationnarité, ensuite effectuer des test de causalité au sens de Granger sur ces variables et finalement faire une régression linéaire en fonction des résultats du test de Granger.
+
+```{r cars, message=FALSE, warning=FALSE, echo=FALSE, results='hide'}
+library(xlsx)
+library(readxl)
+library(dplyr)
+library(tseries)
+library(tidyverse)
+library(tidyr)
+library(lmtest)
+
+#load dataframe
+df <- read_excel("agregatsmon.xls")
+
+#On enleve la premiere ligne de donnees qui est en caractere
+df <- df[-c(1),]
+df <- df[-c(518, 519, 520, 521, 522, 523, 524, 525, 526, 527),]
+
+#On enleve les colonnes avec NA
+df <- df %>% discard(~all(is.na(.) | . ==""))
+
+#Calcul de stationnarite taux de change Brh
+adf.test(df$`TAUX DE CHANGE BRH`)
+
+#Calcul de stationnarite Monnaie en circulation
+adf.test(df$`MONNAIE EN CICULATION`)
+
+#Calcul de stationnarite depots en gourdes
+adf.test(df$`Dépots gdes`)
+
+#Test de Granger entre Taux de change et Monnaie en circulation
+txch <- ts(df$`TAUX DE CHANGE BRH`)
+depotavue <- ts(df$`Dépots à vue`)
+depot <-ts(df$`Dépots gdes`)
+
+#grangertest(depot, depotavue, order = 1)
+```
+
+## Explication
+
+Pour réaliser l'analyse demandée, on a commencer par appeler plusieurs packages qui seront nécessaires, tels que: tidyverse, readxl, lmtest, tseries, tdyr
+Ces packages sont importants pour pouvoir effectuer les test sur les variables du jeu de données.
+
+Ensuite, on a chargé le jeu de données afin d'effectuer certaines transformations nécessaires pour les analyses. Une fois les données propres, on effectue le test de stationnarité de Dicker-Fuller sur chacune des variables choisies. On a choisi les variables: Taux de change, Dépot a vue et Dépot en gourdes.
+
+Tout de suite apres le test de stationnarite on effectue le test de Grangerbsur les trois series. On termine par une estimation d'un modele de regression lineaire avec taux de change comme variable a expliquer et depota vue, depot en gourdes comme variables explicatives.
+
+```{r pressure, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+#Regression lineaire
+reglin <- lm(txch ~ depot + depotavue, data = df)
+summary(reglin)
+
+```
+
+## Conclusion
+
+Ce travail a permis de mettre en utilisation les competences en nettoyage, transformation et analyse de données sur R.
+
+On a pu voir suivant nos calculs que les trois variables ne sont pas stationnaires. Mais elles le sont en difference premiere. Les Tests de causalité au sens de Granger ne fonctionnent pas parce qu'il y a forte présence de multicolinéarité entre les variables. En ce sens, les résultats de l'estimation de la régression linéaire se retrouvent biasés.
